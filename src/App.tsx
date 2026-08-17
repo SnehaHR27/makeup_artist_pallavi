@@ -1,6 +1,15 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import artistPortrait from "./assets/pallavi_portrait.jpg";
+import cert1 from "./assets/cert_1.jpg";
+import cert2 from "./assets/cert_2.jpg";
+import cert3 from "./assets/cert_3.jpg";
+import cert4 from "./assets/cert_4.jpg";
+import review1 from "./assets/review_1.jpg";
+import review2 from "./assets/review_2.jpg";
+import review3 from "./assets/review_3.jpg";
+import review4 from "./assets/review_4.jpg";
+import review5 from "./assets/review_5.jpg";
 import {
   Menu, X, ChevronLeft, ChevronRight, ChevronDown, Check, Star,
   MapPin, Phone, Mail, Clock, Calendar as CalendarIcon,
@@ -40,7 +49,7 @@ const siteConfig = {
   region: "Chikkamagaluru, Hassan & Bengaluru",
   phone: "+91 86180 54514",
   whatsapp: "918618054514",
-  email: "hello@makeupbypallavi.com",
+  email: "pallaviaryan712@gmail.com",
   instagram: "https://instagram.com/makeup_by_pallavi_blr",
   instagramHandle: "@makeup_by_pallavi_blr",
   hours: [
@@ -201,6 +210,14 @@ const testimonials = [
   { name: "Neha", event: "Reception Client", rating: 4, review: "Beautiful bold look for my reception, exactly the drama I asked for without feeling heavy.", img: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=200&auto=format&fit=crop" },
 ];
 
+const visualReviews = [
+  { id: 1, title: "Natural & Long-lasting Makeup", img: review1 },
+  { id: 2, title: "Special Day Makeover & Hair", img: review2 },
+  { id: 3, title: "Natural Look & Ethics Appreciation", img: review3 },
+  { id: 4, title: "Flawless & Comfortable Bridal Makeup", img: review4 },
+  { id: 5, title: "Incredible Makeover & Patience", img: review5 },
+];
+
 const faqs = [
   { q: "How far in advance should I book?", a: "For weddings, 4–6 months ahead is ideal, especially for dates in the November–February wedding season. Engagement and party bookings can usually be made 3–4 weeks in advance." },
   { q: "Do you offer bridal trials?", a: "Yes. The Signature and Luxury bridal packages include an in-person trial so we can finalize your look together before the wedding day." },
@@ -227,6 +244,14 @@ function getMockStatus(dateObj) {
   if (day % 7 === 0) return "booked";
   if (dow === 0 || dow === 6 || day % 5 === 0) return "limited";
   return "available";
+}
+
+function getDateStatus(dateObj) {
+  if (!dateObj) return "past";
+  const key = `status_${dateObj.getFullYear()}_${dateObj.getMonth()}_${dateObj.getDate()}`;
+  const saved = localStorage.getItem(key);
+  if (saved) return saved;
+  return getMockStatus(dateObj);
 }
 
 const statusMeta = {
@@ -325,7 +350,7 @@ function Reveal({ children, className = "", delay = 0 }) {
    NAVIGATION
    ============================================================ */
 const navLinks = [
-  ["Home", "home"], ["About", "about"], ["Portfolio", "portfolio"],
+  ["Home", "home"], ["About", "about"], ["Credentials", "credentials"], ["Portfolio", "portfolio"],
   ["Availability", "availability"], ["Testimonials", "testimonials"],
   ["FAQ", "faq"], ["Contact", "contact"],
 ];
@@ -663,6 +688,184 @@ function Packages({ onCustomize }) {
 }
 
 /* ============================================================
+   CERTIFICATIONS & ACHIEVEMENTS
+   ============================================================ */
+const certifications = [
+  {
+    id: 1,
+    title: "ASCODET Skill Development Training",
+    institution: "Council for Software Education & Skill Development Training",
+    specialization: "Makeup & Hair Style Training",
+    date: "July 2023",
+    img: cert1,
+  },
+  {
+    id: 2,
+    title: "Lakshmi Shetty Master Class",
+    institution: "Lakshmi Shetty Hair & Makeup Academy",
+    specialization: "1-Day Master Class Certificate of Completion",
+    date: "March 2019",
+    img: cert2,
+  },
+  {
+    id: 3,
+    title: "Jasmine Beauty Care Professional Training",
+    institution: "Jasmine Beauty Care, Bengaluru",
+    specialization: "Professional Makeup & Hair Certification",
+    date: "August 2023",
+    img: cert3,
+  },
+  {
+    id: 4,
+    title: "Divya Kushi Academy Certification",
+    institution: "Divya Kushi Academy",
+    specialization: "Professional Advanced Hair Style Course",
+    date: "March 2024",
+    img: cert4,
+  },
+];
+
+function Certifications() {
+  const [lightboxIdx, setLightboxIdx] = useState(null);
+
+  const openLightbox = (idx) => setLightboxIdx(idx);
+  const closeLightbox = () => setLightboxIdx(null);
+
+  const step = useCallback(
+    (dir) => {
+      setLightboxIdx((idx) => {
+        if (idx === null) return idx;
+        const len = certifications.length;
+        return (idx + dir + len) % len;
+      });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (lightboxIdx === null) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxIdx, step]);
+
+  const active = lightboxIdx !== null ? certifications[lightboxIdx] : null;
+
+  return (
+    <section id="credentials" className="py-24 sm:py-32 bg-[#F5EDE1]">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8">
+        <Reveal>
+          <SectionHeading
+            eyebrow="Credentials"
+            title="Certified Professional Expertise"
+            sub="Trained and certified by some of the most prestigious names and academies in the hair and makeup industry."
+          />
+        </Reveal>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {certifications.map((c, i) => (
+            <Reveal key={c.id} delay={i * 80} className="group bg-[#FBF7F0] border border-[#E4D3B8] flex flex-col justify-between">
+              <button
+                onClick={() => openLightbox(i)}
+                className="text-left w-full h-full flex flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#A9823D] group/btn"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden shrink-0">
+                  <Ph
+                    src={c.img}
+                    alt={c.title}
+                    label={c.title}
+                    className="w-full h-full"
+                    imgClassName="transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-[#1c130c]/0 group-hover:bg-[#1c130c]/25 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="bg-[#FBF7F0]/95 backdrop-blur-sm text-[#2B1D14] px-4 py-2 text-[12px] tracking-[0.08em] uppercase border border-[#E4D3B8]">
+                      View Certificate
+                    </span>
+                  </div>
+                </div>
+                <div className="p-6 flex flex-col justify-between flex-1">
+                  <div>
+                    <span className="text-[10px] tracking-[0.15em] uppercase text-[#A9823D] font-medium block mb-1">
+                      {c.date}
+                    </span>
+                    <h3 className="font-serif text-lg text-[#2B1D14] leading-snug group-hover/btn:text-[#A9823D] transition-colors">
+                      {c.title}
+                    </h3>
+                    <p className="mt-2 text-[13px] text-[#6B5B48] leading-relaxed">
+                      {c.specialization}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-[#E4D3B8] text-[11px] text-[#8A6A3A] tracking-wider uppercase font-medium">
+                    {c.institution}
+                  </div>
+                </div>
+              </button>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+
+      {active && (
+        <div
+          className="fixed inset-0 z-[100] bg-[#140d08]/95 flex items-center justify-center p-4 sm:p-10"
+          role="dialog"
+          aria-modal="true"
+          aria-label={active.title}
+          onClick={closeLightbox}
+        >
+          <button
+            aria-label="Close"
+            onClick={closeLightbox}
+            className="absolute top-5 right-5 text-white/80 hover:text-white p-2"
+          >
+            <X size={26} strokeWidth={1.5} />
+          </button>
+          <button
+            aria-label="Previous certificate"
+            onClick={(e) => {
+              e.stopPropagation();
+              step(-1);
+            }}
+            className="absolute left-2 sm:left-6 text-white/70 hover:text-white p-2"
+          >
+            <ChevronLeft size={30} strokeWidth={1.3} />
+          </button>
+          <button
+            aria-label="Next certificate"
+            onClick={(e) => {
+              e.stopPropagation();
+              step(1);
+            }}
+            className="absolute right-2 sm:right-6 text-white/70 hover:text-white p-2"
+          >
+            <ChevronRight size={30} strokeWidth={1.3} />
+          </button>
+          <div className="max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
+            <Ph
+              src={active.img}
+              alt={active.title}
+              label={active.title}
+              className="max-h-[74vh] w-full"
+              imgClassName="object-contain"
+            />
+            <div className="mt-4 text-center">
+              <p className="text-[#E9D9B8] font-serif text-lg">{active.title}</p>
+              <p className="text-[#B79E78] text-[11px] uppercase tracking-[0.2em] mt-1">
+                {active.institution} · {active.date}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ============================================================
    PORTFOLIO + LIGHTBOX
    ============================================================ */
 function Portfolio() {
@@ -827,6 +1030,7 @@ function Testimonials() {
   const [idx, setIdx] = useState(0);
   const perView = 1;
   const timer = useRef(null);
+  const [lightboxIdx, setLightboxIdx] = useState(null);
 
   useEffect(() => {
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -840,7 +1044,30 @@ function Testimonials() {
     setIdx((i) => (i + dir + testimonials.length) % testimonials.length);
   };
 
+  const step = useCallback(
+    (dir) => {
+      setLightboxIdx((idx) => {
+        if (idx === null) return idx;
+        const len = visualReviews.length;
+        return (idx + dir + len) % len;
+      });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (lightboxIdx === null) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setLightboxIdx(null);
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxIdx, step]);
+
   const t = testimonials[idx];
+  const activeReview = lightboxIdx !== null ? visualReviews[lightboxIdx] : null;
 
   return (
     <section id="testimonials" className="py-24 sm:py-32 bg-[#2B1D14] relative overflow-hidden">
@@ -886,6 +1113,95 @@ function Testimonials() {
           </button>
         </div>
       </div>
+
+      {/* Visual Chat Reviews Section */}
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 mt-24 relative z-10 border-t border-[#5b4a34]/40 pt-16">
+        <Reveal>
+          <div className="text-center mb-12">
+            <Eyebrow dark>Real Stories</Eyebrow>
+            <h3 className="font-serif text-[1.8rem] sm:text-[2.2rem] leading-tight text-[#F1E6D2]">
+              What Our Brides Say (WhatsApp & Chats)
+            </h3>
+            <p className="mt-3 text-[14.5px] text-[#B79E78] leading-relaxed max-w-xl mx-auto">
+              Real screenshots and direct messages shared by our brides after their makeovers. Click to read the full conversations.
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal>
+          <div className="flex sm:grid sm:grid-cols-5 gap-5 overflow-x-auto sm:overflow-x-visible pb-6 sm:pb-0 snap-x snap-mandatory">
+            {visualReviews.map((r, i) => (
+              <button
+                key={r.id}
+                onClick={() => setLightboxIdx(i)}
+                className="group relative flex-none w-[260px] sm:w-auto snap-start block text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A85C]"
+              >
+                <div className="relative aspect-[9/16] overflow-hidden border border-[#5b4a34] bg-[#2B1D14] shadow-md group-hover:border-[#C9A85C] transition-colors duration-300">
+                  <Ph
+                    src={r.img}
+                    alt={r.title}
+                    label={r.title}
+                    className="w-full h-full"
+                    imgClassName="transition-transform duration-700 group-hover:scale-[1.03]"
+                  />
+                  <div className="absolute inset-0 bg-[#1c130c]/30 group-hover:bg-[#1c130c]/10 transition-colors duration-300 flex items-center justify-center">
+                    <span className="bg-[#2B1D14]/95 text-[#F1E6D2] border border-[#5b4a34] px-3.5 py-2 text-[10.5px] uppercase tracking-[0.08em] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      Read Message
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-3 text-[11px] text-[#B79E78] text-center font-medium tracking-wider uppercase group-hover:text-white transition-colors">
+                  {r.title}
+                </p>
+              </button>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+
+      {activeReview && (
+        <div
+          className="fixed inset-0 z-[100] bg-[#140d08]/95 flex items-center justify-center p-4 sm:p-10"
+          role="dialog"
+          aria-modal="true"
+          aria-label={activeReview.title}
+          onClick={() => setLightboxIdx(null)}
+        >
+          <button
+            aria-label="Close"
+            onClick={() => setLightboxIdx(null)}
+            className="absolute top-5 right-5 text-white/80 hover:text-white p-2"
+          >
+            <X size={26} strokeWidth={1.5} />
+          </button>
+          <button
+            aria-label="Previous review"
+            onClick={(e) => { e.stopPropagation(); step(-1); }}
+            className="absolute left-2 sm:left-6 text-white/70 hover:text-white p-2"
+          >
+            <ChevronLeft size={30} strokeWidth={1.3} />
+          </button>
+          <button
+            aria-label="Next review"
+            onClick={(e) => { e.stopPropagation(); step(1); }}
+            className="absolute right-2 sm:right-6 text-white/70 hover:text-white p-2"
+          >
+            <ChevronRight size={30} strokeWidth={1.3} />
+          </button>
+          <div className="max-w-md w-full relative" onClick={(e) => e.stopPropagation()}>
+            <Ph
+              src={activeReview.img}
+              alt={activeReview.title}
+              label={activeReview.title}
+              className="max-h-[80vh] w-full"
+              imgClassName="object-contain"
+            />
+            <div className="mt-4 text-center">
+              <p className="text-[#E9D9B8] font-serif text-lg">{activeReview.title}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -893,7 +1209,7 @@ function Testimonials() {
 /* ============================================================
    AVAILABILITY CALENDAR
    ============================================================ */
-function AvailabilityCalendar({ onSelectDate }) {
+function AvailabilityCalendar({ onSelectDate, isAdmin, onStatusChange }) {
   const [monthOffset, setMonthOffset] = useState(0);
   const today = useMemo(() => new Date(), []);
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -904,6 +1220,22 @@ function AvailabilityCalendar({ onSelectDate }) {
   const cells = [];
   for (let i = 0; i < startDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(viewDate.getFullYear(), viewDate.getMonth(), d));
+
+  const handleCellClick = (date) => {
+    if (isAdmin) {
+      const currentStatus = getDateStatus(date);
+      let nextStatus = "available";
+      if (currentStatus === "available") nextStatus = "limited";
+      else if (currentStatus === "limited") nextStatus = "booked";
+      else if (currentStatus === "booked") nextStatus = "available";
+
+      const key = `status_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}`;
+      localStorage.setItem(key, nextStatus);
+      onStatusChange();
+    } else {
+      onSelectDate(date);
+    }
+  };
 
   return (
     <div className="bg-white border border-[#E4D3B8] p-5 sm:p-8">
@@ -934,20 +1266,20 @@ function AvailabilityCalendar({ onSelectDate }) {
       <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {cells.map((date, i) => {
           if (!date) return <div key={i} />;
-          const status = getMockStatus(date);
-          const disabled = status === "past" || status === "booked";
+          const status = getDateStatus(date);
+          const disabled = status === "past" || (!isAdmin && status === "booked");
           const meta = statusMeta[status];
           return (
             <button
               key={i}
               disabled={disabled}
-              onClick={() => onSelectDate(date)}
+              onClick={() => handleCellClick(date)}
               aria-label={`${date.toDateString()} — ${meta.label || "unavailable"}`}
               className={`aspect-square flex flex-col items-center justify-center gap-1 text-[12.5px] sm:text-[13px] border transition-colors ${
                 disabled
                   ? "border-transparent text-[#C9BBA6] cursor-not-allowed"
                   : "border-[#E4D3B8] text-[#3B2A20] hover:border-[#A9823D] hover:bg-[#F6EEDD] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#A9823D]"
-              }`}
+              } ${isAdmin && status !== "past" ? "cursor-pointer hover:scale-[1.05]" : ""}`}
             >
               <span>{date.getDate()}</span>
               {status !== "past" && <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />}
@@ -967,7 +1299,7 @@ function AvailabilityCalendar({ onSelectDate }) {
   );
 }
 
-function Availability({ onSelectDate }) {
+function Availability({ onSelectDate, isAdmin, onStatusChange, onLogout }) {
   return (
     <section id="availability" className="py-24 sm:py-32 bg-[#F5EDE1]">
       <div className="max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-[1fr_1.1fr] gap-14 items-start">
@@ -990,8 +1322,27 @@ function Availability({ onSelectDate }) {
             </div>
           </Reveal>
         </div>
+        
         <Reveal delay={150}>
-          <AvailabilityCalendar onSelectDate={onSelectDate} />
+          <div className="relative">
+            {isAdmin && (
+              <div className="bg-[#B79E78]/15 border border-[#B79E78]/40 text-[#2B1D14] px-5 py-3 text-[12px] tracking-wider uppercase font-medium flex items-center justify-between mb-4">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#7C9070] animate-pulse" />
+                  Admin Mode Active
+                </span>
+                <button onClick={onLogout} className="text-[#A9823D] hover:text-[#2B1D14] transition-colors font-bold underline uppercase text-[10.5px]">
+                  Logout
+                </button>
+              </div>
+            )}
+            <AvailabilityCalendar onSelectDate={onSelectDate} isAdmin={isAdmin} onStatusChange={onStatusChange} />
+            {isAdmin && (
+              <p className="mt-3 text-center text-xs text-[#8A6A3A] italic">
+                💡 Admin: Click any future date to cycle: Available ➔ Limited ➔ Booked ➔ Available
+              </p>
+            )}
+          </div>
         </Reveal>
       </div>
     </section>
@@ -1387,7 +1738,7 @@ function FinalCTA({ onBook }) {
 /* ============================================================
    FOOTER + FLOATING WHATSAPP
    ============================================================ */
-function Footer() {
+function Footer({ onAdminClick }) {
   return (
     <footer className="bg-[#1c130c] text-[#B79E78] py-10">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12px]">
@@ -1398,12 +1749,102 @@ function Footer() {
           <p className="font-serif text-[#E9D9B8] text-base">{siteConfig.brandName}</p>
         </div>
         <p>&copy; {new Date().getFullYear()} {siteConfig.brandName}. All rights reserved.</p>
-        <div className="flex gap-5">
+        <div className="flex gap-5 items-center">
           <a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-white">Instagram</a>
           <a href={`mailto:${siteConfig.email}`} className="hover:text-white">Email</a>
+          <span className="text-[#5b4a34]">|</span>
+          <button onClick={onAdminClick} className="hover:text-white transition-colors cursor-pointer uppercase tracking-[0.05em] text-[11px] font-medium">
+            Admin Login
+          </button>
         </div>
       </div>
     </footer>
+  );
+}
+
+/* ============================================================
+   ADMIN LOGIN MODAL
+   ============================================================ */
+function AdminLoginModal({ open, onClose, onLoginSuccess }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setEmail("");
+      setPassword("");
+      setError("");
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (email === "pallaviaryan712@gmail.com" && password === "pallavi") {
+      onLoginSuccess();
+      onClose();
+    } else {
+      setError("Invalid email address or password.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#140d08]/70 p-4" role="dialog" aria-modal="true" aria-label="Admin Login">
+      <div className="bg-[#FBF7F0] w-full max-w-md p-8 border border-[#E4D3B8] shadow-2xl relative">
+        <button aria-label="Close login modal" onClick={onClose} className="absolute top-5 right-5 p-2 text-[#8A6A3A] hover:text-[#2B1D14] transition-colors">
+          <X size={20} strokeWidth={1.5} />
+        </button>
+        <div className="text-center mb-8">
+          <span className="font-serif text-lg tracking-[0.1em] border border-[#C9A85C] px-3 py-1 text-[#C9A85C] inline-block mb-3">
+            ASP
+          </span>
+          <h3 className="font-serif text-2xl text-[#2B1D14]">Admin Portal</h3>
+          <p className="text-[12px] uppercase tracking-[0.12em] text-[#A9823D] mt-1">
+            Access Availability Management
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block text-[13px] font-medium text-[#2B1D14] mb-2" htmlFor="admin-email">Email Address</label>
+            <input
+              id="admin-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="pallaviaryan712@gmail.com"
+              className="w-full border border-[#D9C2A3] bg-white px-4 py-3 text-[14px] text-[#2B1D14] focus:outline-none focus:border-[#A9823D]"
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] font-medium text-[#2B1D14] mb-2" htmlFor="admin-pass">Password</label>
+            <input
+              id="admin-pass"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full border border-[#D9C2A3] bg-white px-4 py-3 text-[14px] text-[#2B1D14] focus:outline-none focus:border-[#A9823D]"
+            />
+          </div>
+          {error && (
+            <p className="text-[12px] text-[#B5605A] font-medium text-center bg-[#B5605A]/10 py-2 border border-[#B5605A]/20">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            className="w-full bg-[#2B1D14] text-[#F6EEDD] hover:bg-[#4a3221] py-3.5 text-[13px] tracking-[0.08em] uppercase font-medium transition-colors"
+          >
+            Login to Dashboard
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -1428,6 +1869,9 @@ export default function App() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingDate, setBookingDate] = useState(null);
   const [bookingService, setBookingService] = useState("");
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [calendarTick, setCalendarTick] = useState(0);
 
   const openBooking = (service) => {
     setBookingService(service || "");
@@ -1459,15 +1903,22 @@ export default function App() {
         <Hero onBook={() => openBooking("")} onView={() => scrollTo("portfolio")} />
         <TrustStats />
         <About onBook={() => openBooking("")} />
+        <Certifications />
         <Portfolio />
         <Testimonials />
-        <Availability onSelectDate={openBookingWithDate} />
+        <Availability
+          key={calendarTick}
+          onSelectDate={openBookingWithDate}
+          isAdmin={isAdminLoggedIn}
+          onStatusChange={() => setCalendarTick((t) => t + 1)}
+          onLogout={() => setIsAdminLoggedIn(false)}
+        />
         <InstagramSection />
         <FAQ />
         <FinalCTA onBook={() => openBooking("")} />
       </main>
       <Contact />
-      <Footer />
+      <Footer onAdminClick={() => setAdminOpen(true)} />
       <FloatingWhatsApp />
 
       <BookingForm
@@ -1475,6 +1926,12 @@ export default function App() {
         onClose={closeBooking}
         initialDate={bookingDate}
         initialService={bookingService}
+      />
+
+      <AdminLoginModal
+        open={adminOpen}
+        onClose={() => setAdminOpen(false)}
+        onLoginSuccess={() => setIsAdminLoggedIn(true)}
       />
     </div>
   );
