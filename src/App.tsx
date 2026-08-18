@@ -59,8 +59,7 @@ const siteConfig = {
   ],
   stats: [
     { value: "6+", label: "Years Experience" },
-    { value: "500+", label: "Happy Clients" },
-    { value: "60+", label: "Weddings Styled" },
+    { value: "1000+", label: "Happy Clients" },
     { value: "4.9", label: "Average Rating" },
   ],
 };
@@ -1981,7 +1980,6 @@ export default function App() {
         <Portfolio />
         <Testimonials />
         <Availability
-          key={calendarTick}
           onSelectDate={openBookingWithDate}
           isAdmin={isAdminLoggedIn}
           onStatusChange={handleStatusChange}
