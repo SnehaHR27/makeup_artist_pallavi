@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { supabase, isSupabaseConfigured } from "./supabaseClient";
 import artistPortrait from "./assets/pallavi_portrait.jpg";
 import cert1 from "./assets/cert_1.jpg";
 import cert2 from "./assets/cert_2.jpg";
@@ -58,7 +59,7 @@ const siteConfig = {
   ],
   stats: [
     { value: "6+", label: "Years Experience" },
-    { value: "180+", label: "Happy Clients" },
+    { value: "500+", label: "Happy Clients" },
     { value: "60+", label: "Weddings Styled" },
     { value: "4.9", label: "Average Rating" },
   ],
@@ -246,9 +247,12 @@ function getMockStatus(dateObj) {
   return "available";
 }
 
-function getDateStatus(dateObj) {
+function getDateStatus(dateObj, dbAvailability) {
   if (!dateObj) return "past";
   const key = `status_${dateObj.getFullYear()}_${dateObj.getMonth()}_${dateObj.getDate()}`;
+  if (dbAvailability && key in dbAvailability) {
+    return dbAvailability[key];
+  }
   const saved = localStorage.getItem(key);
   if (saved) return saved;
   return getMockStatus(dateObj);
@@ -1209,7 +1213,7 @@ function Testimonials() {
 /* ============================================================
    AVAILABILITY CALENDAR
    ============================================================ */
-function AvailabilityCalendar({ onSelectDate, isAdmin, onStatusChange }) {
+function AvailabilityCalendar({ onSelectDate, isAdmin, onStatusChange, dbAvailability }) {
   const [monthOffset, setMonthOffset] = useState(0);
   const today = useMemo(() => new Date(), []);
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -1223,7 +1227,7 @@ function AvailabilityCalendar({ onSelectDate, isAdmin, onStatusChange }) {
 
   const handleCellClick = (date) => {
     if (isAdmin) {
-      const currentStatus = getDateStatus(date);
+      const currentStatus = getDateStatus(date, dbAvailability);
       let nextStatus = "available";
       if (currentStatus === "available") nextStatus = "limited";
       else if (currentStatus === "limited") nextStatus = "booked";
@@ -1231,7 +1235,7 @@ function AvailabilityCalendar({ onSelectDate, isAdmin, onStatusChange }) {
 
       const key = `status_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}`;
       localStorage.setItem(key, nextStatus);
-      onStatusChange();
+      onStatusChange(key, nextStatus);
     } else {
       onSelectDate(date);
     }
@@ -1266,8 +1270,8 @@ function AvailabilityCalendar({ onSelectDate, isAdmin, onStatusChange }) {
       <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {cells.map((date, i) => {
           if (!date) return <div key={i} />;
-          const status = getDateStatus(date);
-          const disabled = status === "past" || (!isAdmin && status === "booked");
+          const status = getDateStatus(date, dbAvailability);
+          const disabled = status === "past";
           const meta = statusMeta[status];
           return (
             <button
@@ -1299,7 +1303,7 @@ function AvailabilityCalendar({ onSelectDate, isAdmin, onStatusChange }) {
   );
 }
 
-function Availability({ onSelectDate, isAdmin, onStatusChange, onLogout }) {
+function Availability({ onSelectDate, isAdmin, onStatusChange, onLogout, dbAvailability }) {
   return (
     <section id="availability" className="py-24 sm:py-32 bg-[#F5EDE1]">
       <div className="max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-[1fr_1.1fr] gap-14 items-start">
@@ -1336,7 +1340,7 @@ function Availability({ onSelectDate, isAdmin, onStatusChange, onLogout }) {
                 </button>
               </div>
             )}
-            <AvailabilityCalendar onSelectDate={onSelectDate} isAdmin={isAdmin} onStatusChange={onStatusChange} />
+            <AvailabilityCalendar onSelectDate={onSelectDate} isAdmin={isAdmin} onStatusChange={onStatusChange} dbAvailability={dbAvailability} />
             {isAdmin && (
               <p className="mt-3 text-center text-xs text-[#8A6A3A] italic">
                 💡 Admin: Click any future date to cycle: Available ➔ Limited ➔ Booked ➔ Available
@@ -1355,7 +1359,7 @@ function Availability({ onSelectDate, isAdmin, onStatusChange, onLogout }) {
 const eventTypes = ["Bridal Wedding", "Engagement", "Reception", "Party", "Photoshoot", "Special Event"];
 const packageOptions = ["Individual Service", "Not sure yet"];
 
-function BookingForm({ open, onClose, initialDate, initialService }) {
+function BookingForm({ open, onClose, initialDate, initialService, dbAvailability }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     name: "", phone: "", email: "",
@@ -1383,9 +1387,30 @@ function BookingForm({ open, onClose, initialDate, initialService }) {
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  const getSelectedDateStatus = () => {
+    if (!form.date) return null;
+    const [year, month, day] = form.date.split("-").map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    return getDateStatus(dateObj, dbAvailability);
+  };
+
+  const dateStatus = getSelectedDateStatus();
+  const isDateBooked = dateStatus === "booked";
+
   const validateStep = (s) => {
     const e = {};
-    if (s === 1 && !form.date) e.date = "Select an event date to continue.";
+    if (s === 1) {
+      if (!form.date) {
+        e.date = "Select an event date to continue.";
+      } else {
+        const [year, month, day] = form.date.split("-").map(Number);
+        const dateObj = new Date(year, month - 1, day);
+        const status = getDateStatus(dateObj, dbAvailability);
+        if (status === "past") {
+          e.date = "You cannot request a booking for a past date.";
+        }
+      }
+    }
     if (s === 2) {
       if (!form.name.trim()) e.name = "Enter your full name.";
       if (!form.phone.trim()) e.phone = "Enter a phone number.";
@@ -1405,7 +1430,8 @@ function BookingForm({ open, onClose, initialDate, initialService }) {
     `Hi ${siteConfig.artistName.split(" ")[0]}! I'd like to request a booking.\n` +
     `Name: ${form.name}\nEvent: ${form.eventType || "-"}\nDate: ${form.date || "-"}\nTime: ${form.time || "-"}\n` +
     `Location: ${form.location || "-"}\nGuests/People: ${form.people}\nService/Package: ${form.service || "-"}\n` +
-    `Preferred style: ${form.style || "-"}\nNotes: ${form.notes || "-"}`;
+    `Preferred style: ${form.style || "-"}\nNotes: ${form.notes || "-"}` +
+    (isDateBooked ? `\n(Note: This slot is currently booked; requested waitlist slot)` : "");
 
   const submit = () => {
     // NOTE: mock submission only — wire to Supabase / Firebase / backend API here.
@@ -1468,6 +1494,11 @@ function BookingForm({ open, onClose, initialDate, initialService }) {
                     className="w-full border border-[#D9C2A3] bg-white px-4 py-3 text-[14px] text-[#2B1D14] focus:outline-none focus:border-[#A9823D]"
                   />
                   {errors.date && <p className="text-[12px] text-[#B5605A] mt-2">{errors.date}</p>}
+                  {dateStatus === "booked" && (
+                    <p className="text-[12px] text-[#A9823D] font-medium mt-3 bg-[#A9823D]/10 p-3 border border-[#A9823D]/20 leading-relaxed">
+                      ⚠️ Note: This date is currently marked as booked. You can still submit a request to join the waitlist, and Pallavi will check if she can accommodate you.
+                    </p>
+                  )}
                   <p className="mt-3 text-[12.5px] text-[#8A6A3A]">
                     Picked a date from the calendar above? It's already filled in — just confirm and continue.
                   </p>
@@ -1872,6 +1903,49 @@ export default function App() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [calendarTick, setCalendarTick] = useState(0);
+  const [dbAvailability, setDbAvailability] = useState({});
+
+  const loadDbAvailability = useCallback(async () => {
+    if (!isSupabaseConfigured || !supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from("availability")
+        .select("date_key, status");
+      if (error) throw error;
+      if (data) {
+        const cache = {};
+        data.forEach((row) => {
+          cache[row.date_key] = row.status;
+        });
+        setDbAvailability(cache);
+      }
+    } catch (err) {
+      console.error("Failed to load availability from Supabase:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDbAvailability();
+  }, [loadDbAvailability]);
+
+  const handleStatusChange = async (key, newStatus) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from("availability")
+          .upsert({ date_key: key, status: newStatus });
+        if (error) throw error;
+
+        setDbAvailability((prev) => ({
+          ...prev,
+          [key]: newStatus,
+        }));
+      } catch (err) {
+        console.error("Failed to update status in Supabase:", err);
+      }
+    }
+    setCalendarTick((t) => t + 1);
+  };
 
   const openBooking = (service) => {
     setBookingService(service || "");
@@ -1910,8 +1984,9 @@ export default function App() {
           key={calendarTick}
           onSelectDate={openBookingWithDate}
           isAdmin={isAdminLoggedIn}
-          onStatusChange={() => setCalendarTick((t) => t + 1)}
+          onStatusChange={handleStatusChange}
           onLogout={() => setIsAdminLoggedIn(false)}
+          dbAvailability={dbAvailability}
         />
         <InstagramSection />
         <FAQ />
@@ -1926,6 +2001,7 @@ export default function App() {
         onClose={closeBooking}
         initialDate={bookingDate}
         initialService={bookingService}
+        dbAvailability={dbAvailability}
       />
 
       <AdminLoginModal
